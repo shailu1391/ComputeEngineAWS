@@ -1,0 +1,173 @@
+{% extends "base.html" %} {% block head %}
+
+
+<script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
+
+<script
+  type="text/javascript"
+  src="https://www.gstatic.com/charts/loader.js"
+></script>
+
+</script> 
+
+
+
+
+
+
+
+<script type="text/javascript">
+  google.charts.load("current", { packages: ["corechart"] });
+  google.charts.setOnLoadCallback(drawChart);
+
+  console.log("-----> ",{{res[0]["values"]|tojson }})
+
+  var data = {{ pi_estimations|tojson }}
+  var vals = []
+  console.log("What we want: ",data)
+
+  plot = [["run", "pi estimate", "pi"],]
+
+  for (i = 0; i < data.length; i++) {
+    plot.push([i,data[i],3.14159265359])
+    
+  }
+
+  console.log(plot)
+
+
+
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable(plot);
+
+    var options = {
+      title: "estimated value vs actual value of pi",
+      curveType: "function",
+      legend: { position: "bottom" },
+    };
+
+    var chart = new google.visualization.LineChart(
+      document.getElementById("curve_chart")
+    );
+
+    chart.draw(data, options);
+  }
+</script>
+
+{% endblock %} {% block header %}Resources{% endblock %} {% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <div
+        id="curve_chart"
+        style="width: auto; height: auto: overflow: scroll;"
+      ></div>
+      <p>
+        Estimated value of π is<mark>{{ pi_estimate }} </mark>  (Actual: <mark>3.14159265359</mark> ) Shots taken are
+        <mark>({{ incircle }}/{{shot}})</mark>  Runtime of ..... Estimated cost is .....
+      </p>
+      <br />
+    </div>
+
+
+
+  <!-- <button id="btn" class="btn"> stop </button> -->
+  
+
+
+
+
+    <div class="col-md-6">
+      <button type="submit" id="reset" class="reset btn btn-warning ml-1 my-1">Reset</button>
+      <div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Resource ID</th>
+              <th scope="col">InCircle</th>
+              <th scope="col">Shots</th>
+            </tr>
+          </thead>
+
+          <tbody id="tablebody" >
+            {% for i in res[0]["values"] %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td>{{i["thread_id"]}}</td>
+              <td>{{i["incircle"]}}</td>
+              <td>{{i["shots"]}}</td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script
+src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- <script type="text/javascript">
+    $('button#btn').click(function(){
+      $.ajax({
+          url: "/_get_data/",
+          type: "POST",
+          success: function(resp){
+              $('div#response').append(resp.data);
+          }
+      });
+    });
+</script> -->
+
+
+<script>
+
+
+  $(document).ready(function() {
+      // alert("document ready occurred!");
+      var x = 0
+
+    // $('button#reset').click(function(){
+      
+    //             $('tbody#tablebody').append("<tr></tr>");
+    //       })
+    
+          $(document).ready(function(){
+            $("button#reset").click(function(){
+              $("tbody#tablebody").empty();
+            });
+          });
+
+  setIntervalX(function () {
+    var index = 1
+          $.ajax({
+            url: "/_get_data",
+            type: "POST",
+            dataType: "json",
+            success: function (data) {
+              // console.log("The other data: ",data["data"])
+              data["data"].forEach(function(item2,idx) {
+                JSON.parse(item2["values"]).forEach(function(item) {
+                console.log("item: ",item)
+                $('tbody#tablebody').append("<tr><th scope='row'>"+ index+"</th><td>"+ idx +"</td><td>"+ item[0] +"</td><td> "+ item[1] +"</td></tr>");
+                  index += 1
+              });
+              });
+            },
+        });
+          }, 1000, 1);
+
+  $('button#btn').click(function(){
+  window.clearInterval(intervalId);
+    });
+});
+
+
+</script>
+
+{% endblock %}
